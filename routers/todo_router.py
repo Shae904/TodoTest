@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import Literal, Optional
 
 from database import get_db
 from schemas.todo_schema import TodoCreate, TodoUpdate, TodoResponse
@@ -13,8 +14,32 @@ router = APIRouter(
 
 
 @router.post("/", response_model=TodoResponse)
-async def create_todo(todo_data: TodoCreate, db: Session = Depends(get_db)):
+async def create_todo(task: str, person: str, db: Session = Depends(get_db)):
+    todo_data = TodoCreate(task = task, person = person)
     return todo_service.create_todo(db, todo_data)
+
+@router.get("/filter/", response_model=list[TodoResponse])
+async def filter_todos(
+    task: Optional[str] = None,
+    person: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    return todo_service.filter_todos(db, task, person)
+
+@router.get("/sort/", response_model=list[TodoResponse])
+async def sort_todos(
+    sort_by: Literal["task","person"],
+    db: Session = Depends(get_db)
+):
+    todos = todo_service.sort_todos(db, sort_by)
+
+    if todos is None:
+        raise HTTPException(
+            status_code=400,
+            detail="sort_by must be either 'task' or 'person'"
+        )
+
+    return todos
 
 
 @router.get("/{todoid}", response_model=TodoResponse)

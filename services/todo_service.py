@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from models import Todo
 from schemas.todo_schema import TodoCreate, TodoUpdate
+from typing import Optional
 
 
 def create_todo(db: Session, todo_data: TodoCreate):
@@ -14,6 +15,27 @@ def create_todo(db: Session, todo_data: TodoCreate):
     db.refresh(todo)
 
     return todo
+
+def filter_todos(
+    db: Session,
+    task: Optional[str] = None,
+    person: Optional[str] = None
+):
+    query = db.query(Todo)
+
+    if task is not None:
+        query = query.filter(Todo.task == task)
+
+    if person is not None:
+        query = query.filter(Todo.person == person)
+
+    return query.all()
+
+def sort_todos(db: Session, sort_by: str):
+    if sort_by == "task":
+        return db.query(Todo).order_by(Todo.task).all()
+
+    return db.query(Todo).order_by(Todo.person).all()
 
 
 def get_todo(db: Session, todoid: int):
@@ -48,3 +70,4 @@ def delete_todo(db: Session, todoid: int):
     db.commit()
 
     return todo
+
