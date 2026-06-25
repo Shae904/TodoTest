@@ -26,8 +26,11 @@ def update_todo(db: Session, todoid: int, todo_data: TodoUpdate):
     if todo is None:
         return None
 
-    todo.task = todo_data.task
-    todo.person = todo_data.person
+    if todo_data.task is not None:
+        todo.task = todo_data.task
+
+    if todo_data.person is not None:
+        todo.person = todo_data.person
 
     db.commit()
     db.refresh(todo)
